@@ -14,8 +14,6 @@ brew install --cask sulemaanhamza/tote/tote
 xattr -d com.apple.quarantine /Applications/Tote.app
 ```
 
-The tap-qualified name (`sulemaanhamza/tote/tote`) avoids any future name collisions with other casks.
-
 **Direct download**
 
 Grab the latest zip from [Releases](https://github.com/sulemaanhamza/tote/releases), unzip, drag `Tote.app` to `/Applications`, then:
