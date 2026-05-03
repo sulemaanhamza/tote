@@ -4,12 +4,16 @@ import UniformTypeIdentifiers
 
 struct PopoverView: View {
     @ObservedObject var store: ToteStore
+    @ObservedObject var updater: Updater
     /// Owned by the AppDelegate; we publish the hovered URL so the QL
     /// monitor can preview it on spacebar.
     @ObservedObject var hover: HoverState
+    /// Closes the popover (used by the update banner's "Later" button).
+    let onLater: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            updateBanner
             if store.entries.isEmpty {
                 if store.hasEverAdded {
                     terseEmptyState
@@ -28,6 +32,39 @@ struct PopoverView: View {
         .padding(8)
         .frame(width: 300)
         .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Visible only when there's actually something to update. While
+    /// `.idle` (the common case), this collapses to nothing — no
+    /// padding, no spacer, no trace.
+    @ViewBuilder
+    private var updateBanner: some View {
+        switch updater.state {
+        case .idle:
+            EmptyView()
+        case .available(let version, _):
+            UpdateBanner(
+                title: "\(version) available",
+                primary: ("Update", { updater.updateAndRestart() }),
+                secondary: ("Later", onLater)
+            )
+            .padding(.bottom, 6)
+        case .downloading(let version):
+            UpdateBanner(
+                title: "Downloading \(version)…",
+                primary: nil,
+                secondary: nil,
+                showsSpinner: true
+            )
+            .padding(.bottom, 6)
+        case .pending(let version):
+            UpdateBanner(
+                title: "\(version) ready",
+                primary: ("Restart", { updater.handleClick() }),
+                secondary: ("Later", onLater)
+            )
+            .padding(.bottom, 6)
+        }
     }
 
     private var terseEmptyState: some View {
@@ -68,6 +105,51 @@ struct PopoverView: View {
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+}
+
+/// Single-row banner pinned to the top of the popover when the updater
+/// has anything for the user — surfaces version availability without
+/// requiring them to right-click the menu bar icon.
+private struct UpdateBanner: View {
+    let title: String
+    let primary: (label: String, action: () -> Void)?
+    let secondary: (label: String, action: () -> Void)?
+    var showsSpinner: Bool = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if showsSpinner {
+                ProgressView()
+                    .controlSize(.small)
+                    .scaleEffect(0.7)
+                    .frame(width: 14, height: 14)
+            } else {
+                Image(systemName: "arrow.down.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.accentColor)
+            }
+            Text(title)
+                .font(.system(size: 12))
+                .lineLimit(1)
+            Spacer(minLength: 4)
+            if let secondary {
+                Button(secondary.label, action: secondary.action)
+                    .controlSize(.small)
+                    .buttonStyle(.borderless)
+            }
+            if let primary {
+                Button(primary.label, action: primary.action)
+                    .controlSize(.small)
+                    .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color.accentColor.opacity(0.10))
+        )
     }
 }
 

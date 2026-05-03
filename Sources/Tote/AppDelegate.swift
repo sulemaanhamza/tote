@@ -11,7 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var captureWindow: HotKeyCaptureWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let pop = PopoverController(store: store)
+        let pop = PopoverController(store: store, updater: updater)
         popover = pop
 
         menuBar = MenuBarController(

@@ -5,15 +5,22 @@ import QuickLookUI
 @MainActor
 final class PopoverController: NSObject {
     private let store: ToteStore
+    private let updater: Updater
     private let hover = HoverState()
     private let popover = NSPopover()
     private var keyMonitor: Any?
     private var quickLookController: QuickLookController?
 
-    init(store: ToteStore) {
+    init(store: ToteStore, updater: Updater) {
         self.store = store
+        self.updater = updater
         super.init()
-        let view = PopoverView(store: store, hover: hover)
+        let view = PopoverView(
+            store: store,
+            updater: updater,
+            hover: hover,
+            onLater: { [weak self] in self?.dismiss() }
+        )
         let host = NSHostingController(rootView: view)
         // Without this, NSHostingController reports a default ~480x320
         // and NSPopover renders an oversized bubble around the actual
@@ -29,6 +36,11 @@ final class PopoverController: NSObject {
         if popover.isShown {
             popover.performClose(nil)
         } else {
+            // Cheap GitHub API ping every time the popover opens, so
+            // users see a fresh "update available" banner without
+            // restarting the app. State updates flow into the SwiftUI
+            // banner via @Published.
+            Task { await updater.check() }
             popover.show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
             installKeyMonitor()
         }

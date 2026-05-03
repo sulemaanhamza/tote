@@ -57,6 +57,23 @@ final class Updater: ObservableObject {
         }
     }
 
+    /// One-click "Update & Restart" path used by the popover banner. If
+    /// `.available`, downloads first; once `.pending`, applies and exits.
+    /// The popover stays open while we work and reflects the in-flight
+    /// .downloading state via @Published.
+    func updateAndRestart() {
+        Task {
+            if case .available = state {
+                await startDownload()
+            }
+            if case .pending = state {
+                if Self.applyPendingUpdateIfPossible() {
+                    exit(0)
+                }
+            }
+        }
+    }
+
     private func startDownload() async {
         guard case .available(let version, let zipURL) = state else { return }
         state = .downloading(version: version)
