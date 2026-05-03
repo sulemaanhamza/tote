@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let updater = Updater()
     private var menuBar: MenuBarController?
     private var popover: PopoverController?
+    private var service: StashService?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let pop = PopoverController(store: store)
@@ -25,6 +26,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.showStandardAboutPanel()
             }
         )
+
+        // Register as a system Service ("Stash" in the right-click menu
+        // for file selections). NSUpdateDynamicServices nudges the
+        // services daemon (pbs) to re-scan our Info.plist; without it,
+        // the menu entry can take a logout/login to appear on first run.
+        let svc = StashService(store: store)
+        service = svc
+        NSApp.servicesProvider = svc
+        NSUpdateDynamicServices()
 
         Task { await updater.check() }
     }
