@@ -2,8 +2,8 @@
 set -euo pipefail
 
 VERSION="${1:-0.1.0}"
-NAME="Stash"
-BUNDLE_ID="com.sulemaanhamza.stash"
+NAME="Tote"
+BUNDLE_ID="com.sulemaanhamza.tote"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="$ROOT/build"
 APP_DIR="$BUILD_DIR/$NAME.app"
@@ -64,10 +64,10 @@ cat > "$APP_DIR/Contents/Info.plist" <<EOF
             <key>NSMenuItem</key>
             <dict>
                 <key>default</key>
-                <string>Stash</string>
+                <string>Tote</string>
             </dict>
             <key>NSMessage</key>
-            <string>stashFiles</string>
+            <string>toteFiles</string>
             <key>NSPortName</key>
             <string>$NAME</string>
             <key>NSSendTypes</key>

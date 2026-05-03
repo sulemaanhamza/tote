@@ -1,7 +1,7 @@
 import AppKit
 
-/// In-process smoke tests for Stash's pure logic (no NSApplication
-/// needed). Run with: `swift run Stash --test`.
+/// In-process smoke tests for Tote's pure logic (no NSApplication
+/// needed). Run with: `swift run Tote --test`.
 enum SelfTests {
     /// Mutable bag the test functions share. A class so the closures
     /// passed to `MainActor.assumeIsolated` can mutate it without
@@ -43,9 +43,9 @@ enum SelfTests {
     private static func runMergeTests(_ r: Runner) {
         let cap = 5
 
-        let empty: [StashEntry] = []
+        let empty: [ToteEntry] = []
         r.check("merge nothing into nothing → empty",
-                StashStore.merge(adding: [], into: empty, capacity: cap).isEmpty)
+                ToteStore.merge(adding: [], into: empty, capacity: cap).isEmpty)
 
         let a = makeSyntheticEntry(name: "a.txt", path: "/tmp")
         let b = makeSyntheticEntry(name: "b.txt", path: "/tmp")
@@ -54,39 +54,39 @@ enum SelfTests {
         let e = makeSyntheticEntry(name: "e.txt", path: "/tmp")
         let f = makeSyntheticEntry(name: "f.txt", path: "/tmp")
 
-        let one = StashStore.merge(adding: [a], into: [], capacity: cap)
+        let one = ToteStore.merge(adding: [a], into: [], capacity: cap)
         r.check("single add length", one.count == 1)
         r.check("single add identity", one.first?.displayName == "a.txt")
 
-        let abThenC = StashStore.merge(adding: [c], into: [b, a], capacity: cap)
+        let abThenC = ToteStore.merge(adding: [c], into: [b, a], capacity: cap)
         r.check("newest at top: c first", abThenC.first?.displayName == "c.txt")
         r.check("newest at top: b second", abThenC[1].displayName == "b.txt")
         r.check("newest at top: a last", abThenC[2].displayName == "a.txt")
 
-        let overflow = StashStore.merge(adding: [f], into: [e, d, c, b, a], capacity: cap)
+        let overflow = ToteStore.merge(adding: [f], into: [e, d, c, b, a], capacity: cap)
         r.check("overflow length capped", overflow.count == cap)
         r.check("overflow keeps newest", overflow.first?.displayName == "f.txt")
         r.check("overflow drops oldest", !overflow.contains(where: { $0.displayName == "a.txt" }))
 
         let aDup = makeSyntheticEntry(name: "a.txt", path: "/tmp")
-        let bumped = StashStore.merge(adding: [aDup], into: [c, b, a], capacity: cap)
-        r.check("re-stash dedupes by path", bumped.count == 3)
-        r.check("re-stash bumps to top", bumped.first?.displayName == "a.txt")
-        r.check("re-stash preserves others",
+        let bumped = ToteStore.merge(adding: [aDup], into: [c, b, a], capacity: cap)
+        r.check("re-add dedupes by path", bumped.count == 3)
+        r.check("re-add bumps to top", bumped.first?.displayName == "a.txt")
+        r.check("re-add preserves others",
                 Set(bumped.map(\.displayName)) == ["a.txt", "b.txt", "c.txt"])
 
-        let multi = StashStore.merge(adding: [c, b, a], into: [], capacity: cap)
+        let multi = ToteStore.merge(adding: [c, b, a], into: [], capacity: cap)
         r.check("multi-add order: first → top",
                 multi.map(\.displayName) == ["c.txt", "b.txt", "a.txt"])
 
-        let batchDup = StashStore.merge(adding: [a, a, a], into: [], capacity: cap)
+        let batchDup = ToteStore.merge(adding: [a, a, a], into: [], capacity: cap)
         r.check("same-batch dedupe", batchDup.count == 1)
 
         let aOther = makeSyntheticEntry(name: "a.txt", path: "/elsewhere")
-        let twoFolders = StashStore.merge(adding: [aOther], into: [a], capacity: cap)
+        let twoFolders = ToteStore.merge(adding: [aOther], into: [a], capacity: cap)
         r.check("path disambiguates same name", twoFolders.count == 2)
 
-        r.check("capacity == 5", StashStore.capacity == 5)
+        r.check("capacity == 5", ToteStore.capacity == 5)
         r.check("pathKey joins path + name", a.pathKey == "/tmp/a.txt")
     }
 
@@ -101,13 +101,13 @@ enum SelfTests {
                 LaunchAtLogin.isEnabled == launchBefore)
     }
 
-    // MARK: - StashStore lifecycle (real bookmarks, real persistence)
+    // MARK: - ToteStore lifecycle (real bookmarks, real persistence)
 
     @MainActor
     private static func runStoreLifecycleTests(_ r: Runner) {
         let fm = FileManager.default
         let tempRoot = fm.temporaryDirectory
-            .appendingPathComponent("stash-tests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("tote-tests-\(UUID().uuidString)", isDirectory: true)
         try? fm.createDirectory(at: tempRoot, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: tempRoot) }
 
@@ -122,7 +122,7 @@ enum SelfTests {
         let storeFile = tempRoot.appendingPathComponent("entries.json")
 
         // --- add() inserts entries with newest first ---
-        let s1 = StashStore(storeURL: storeFile)
+        let s1 = ToteStore(storeURL: storeFile)
         r.check("fresh store is empty", s1.entries.isEmpty)
 
         s1.add(urls: [fileA])
@@ -144,7 +144,7 @@ enum SelfTests {
         }
 
         // --- persistence: a fresh store at the same path sees the same entries ---
-        let s2 = StashStore(storeURL: storeFile)
+        let s2 = ToteStore(storeURL: storeFile)
         r.check("persistence: count survives reload",
                 s2.entries.count == 3)
         r.check("persistence: order survives reload",
@@ -158,7 +158,7 @@ enum SelfTests {
         r.check("remove keeps the right ones",
                 Set(s2.entries.map(\.displayName)) == ["beta.txt", "alpha.txt"])
 
-        let s3 = StashStore(storeURL: storeFile)
+        let s3 = ToteStore(storeURL: storeFile)
         r.check("remove persists across reload",
                 Set(s3.entries.map(\.displayName)) == ["beta.txt", "alpha.txt"])
 
@@ -174,7 +174,7 @@ enum SelfTests {
         // --- clear() empties + persists ---
         s3.clear()
         r.check("clear empties store", s3.entries.isEmpty)
-        let s4 = StashStore(storeURL: storeFile)
+        let s4 = ToteStore(storeURL: storeFile)
         r.check("clear persists across reload", s4.entries.isEmpty)
 
         // --- add() with no URLs is a no-op (defensive against empty drops) ---
@@ -186,8 +186,8 @@ enum SelfTests {
     // MARK: - helpers
 
     /// For pure-logic merge tests where the bookmark blob is irrelevant.
-    private static func makeSyntheticEntry(name: String, path: String) -> StashEntry {
-        StashEntry(
+    private static func makeSyntheticEntry(name: String, path: String) -> ToteEntry {
+        ToteEntry(
             bookmark: Data(),
             displayName: name,
             displayPath: path,

@@ -16,7 +16,7 @@ final class Updater: ObservableObject {
     @Published private(set) var state: UpdateState = .idle
 
     private let owner = "sulemaanhamza"
-    private let repo = "stash"
+    private let repo = "tote"
 
     nonisolated static var currentVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
@@ -97,7 +97,7 @@ final class Updater: ObservableObject {
         let bundlePath = Bundle.main.bundlePath
         guard bundlePath.hasSuffix(".app") else { return false }
 
-        let staging = NSTemporaryDirectory() + "stash-update-\(UUID().uuidString)"
+        let staging = NSTemporaryDirectory() + "tote-update-\(UUID().uuidString)"
 
         do {
             try fm.createDirectory(atPath: staging, withIntermediateDirectories: true)
@@ -108,7 +108,7 @@ final class Updater: ObservableObject {
             unzip.waitUntilExit()
             guard unzip.terminationStatus == 0 else { return false }
 
-            let newBundle = "\(staging)/Stash.app"
+            let newBundle = "\(staging)/Tote.app"
             guard fm.fileExists(atPath: newBundle) else { return false }
 
             // Move-then-move-then-cleanup so a failure mid-replace can roll back.
@@ -144,7 +144,7 @@ final class Updater: ObservableObject {
         let (tempURL, _) = try await URLSession.shared.download(from: url)
         let dir = updatesDirectory()
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let dest = dir.appendingPathComponent("Stash-\(version).zip")
+        let dest = dir.appendingPathComponent("Tote-\(version).zip")
         try? FileManager.default.removeItem(at: dest)
         try FileManager.default.moveItem(at: tempURL, to: dest)
         return dest
@@ -155,7 +155,7 @@ final class Updater: ObservableObject {
             for: .applicationSupportDirectory,
             in: .userDomainMask
         ).first!
-        return appSupport.appendingPathComponent("Stash/Updates")
+        return appSupport.appendingPathComponent("Tote/Updates")
     }
 
     private struct GitHubRelease: Decodable {

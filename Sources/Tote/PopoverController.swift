@@ -4,13 +4,13 @@ import QuickLookUI
 
 @MainActor
 final class PopoverController: NSObject {
-    private let store: StashStore
+    private let store: ToteStore
     private let hover = HoverState()
     private let popover = NSPopover()
     private var keyMonitor: Any?
     private var quickLookController: QuickLookController?
 
-    init(store: StashStore) {
+    init(store: ToteStore) {
         self.store = store
         super.init()
         let view = PopoverView(store: store, hover: hover)

@@ -4,7 +4,7 @@ import Combine
 @MainActor
 final class MenuBarController: NSObject {
     private let statusItem: NSStatusItem
-    private let store: StashStore
+    private let store: ToteStore
     private let updater: Updater
     private let onClick: () -> Void
     private let currentLaunchAtLogin: () -> Bool
@@ -15,7 +15,7 @@ final class MenuBarController: NSObject {
     private var cancellables: Set<AnyCancellable> = []
 
     init(
-        store: StashStore,
+        store: ToteStore,
         updater: Updater,
         onClick: @escaping () -> Void,
         currentLaunchAtLogin: @escaping () -> Bool,
@@ -72,7 +72,7 @@ final class MenuBarController: NSObject {
     private func refreshIcon() {
         guard let button = statusItem.button else { return }
         let name = store.entries.isEmpty ? "tray" : "tray.fill"
-        let image = NSImage(systemSymbolName: name, accessibilityDescription: "Stash")
+        let image = NSImage(systemSymbolName: name, accessibilityDescription: "Tote")
         image?.isTemplate = true
         button.image = image
     }
@@ -82,7 +82,7 @@ final class MenuBarController: NSObject {
         button.contentTintColor = over ? .controlAccentColor : nil
         // Swap to filled glyph during drag-over so the target feels real.
         let name = (over || !store.entries.isEmpty) ? "tray.fill" : "tray"
-        let image = NSImage(systemSymbolName: name, accessibilityDescription: "Stash")
+        let image = NSImage(systemSymbolName: name, accessibilityDescription: "Tote")
         image?.isTemplate = true
         button.image = image
     }
@@ -103,7 +103,7 @@ final class MenuBarController: NSObject {
         anim.keyTimes = [0, 0.5, 1]
         anim.duration = 0.22
         anim.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        layer.add(anim, forKey: "stashPulse")
+        layer.add(anim, forKey: "totePulse")
     }
 
     private func topURLForDrag() -> URL? {
@@ -137,7 +137,7 @@ final class MenuBarController: NSObject {
         menu.addItem(launchItem)
 
         let aboutItem = NSMenuItem(
-            title: "About Stash",
+            title: "About Tote",
             action: #selector(handleShowAbout),
             keyEquivalent: ""
         )
@@ -147,7 +147,7 @@ final class MenuBarController: NSObject {
         menu.addItem(NSMenuItem.separator())
 
         menu.addItem(NSMenuItem(
-            title: "Quit Stash",
+            title: "Quit Tote",
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         ))

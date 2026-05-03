@@ -4,7 +4,7 @@ import Combine
 /// One row in the tray. The bookmark is the source of truth; the display
 /// fields are denormalized so we can paint the row without resolving the
 /// bookmark on every redraw.
-struct StashEntry: Identifiable, Codable, Equatable {
+struct ToteEntry: Identifiable, Codable, Equatable {
     let id: UUID
     let bookmark: Data
     let displayName: String
@@ -20,18 +20,18 @@ struct StashEntry: Identifiable, Codable, Equatable {
     }
 
     /// Used only for dedupe — two entries are "the same file" if their
-    /// path matches. We don't compare bookmarks because re-stashing the
+    /// path matches. We don't compare bookmarks because re-adding the
     /// same file produces a fresh bookmark blob each time.
     var pathKey: String { (displayPath as NSString).appendingPathComponent(displayName) }
 }
 
 @MainActor
-final class StashStore: ObservableObject {
-    /// Tight on purpose. The whole identity of Stash is "recent", not
+final class ToteStore: ObservableObject {
+    /// Tight on purpose. The whole identity of Tote is "recent", not
     /// "archive". If the user wants more, they want a folder.
     nonisolated static let capacity = 5
 
-    @Published private(set) var entries: [StashEntry] = []
+    @Published private(set) var entries: [ToteEntry] = []
 
     private let storeURL: URL
 
@@ -40,7 +40,7 @@ final class StashStore: ObservableObject {
         load()
     }
 
-    /// Drop new files at the top of the tray. Re-stashing a file that's
+    /// Drop new files at the top of the tray. Re-adding a file that's
     /// already there bumps it up (no duplicates). Capacity overflow
     /// silently drops the bottom — no animation, no toast; the icon
     /// pulse is the entire confirmation.
@@ -63,7 +63,7 @@ final class StashStore: ObservableObject {
 
     /// Resolve the bookmark to a live URL. Returns nil if the file has
     /// been moved/deleted — caller paints the row dim and disables drag.
-    func resolveURL(for entry: StashEntry) -> URL? {
+    func resolveURL(for entry: ToteEntry) -> URL? {
         var stale = false
         return try? URL(
             resolvingBookmarkData: entry.bookmark,
@@ -77,19 +77,19 @@ final class StashStore: ObservableObject {
     /// Prepend `adding` to `existing`, dedupe by path keeping the newer
     /// occurrence on top, then truncate to `capacity`. Pure function so
     /// SelfTests can hit it without the filesystem.
-    nonisolated static func merge(adding: [StashEntry], into existing: [StashEntry], capacity: Int) -> [StashEntry] {
+    nonisolated static func merge(adding: [ToteEntry], into existing: [ToteEntry], capacity: Int) -> [ToteEntry] {
         var combined = adding + existing
         var seen = Set<String>()
         combined = combined.filter { seen.insert($0.pathKey).inserted }
         return Array(combined.prefix(capacity))
     }
 
-    nonisolated static func makeEntry(from url: URL) -> StashEntry? {
+    nonisolated static func makeEntry(from url: URL) -> ToteEntry? {
         let resolved = url.resolvingSymlinksInPath()
         guard let bookmark = try? resolved.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil) else {
             return nil
         }
-        return StashEntry(
+        return ToteEntry(
             bookmark: bookmark,
             displayName: resolved.lastPathComponent,
             displayPath: resolved.deletingLastPathComponent().path
@@ -100,7 +100,7 @@ final class StashStore: ObservableObject {
 
     private func load() {
         guard let data = try? Data(contentsOf: storeURL) else { return }
-        if let decoded = try? JSONDecoder().decode([StashEntry].self, from: data) {
+        if let decoded = try? JSONDecoder().decode([ToteEntry].self, from: data) {
             entries = decoded
         }
     }
@@ -118,7 +118,7 @@ final class StashStore: ObservableObject {
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)
             .first ?? URL(fileURLWithPath: NSHomeDirectory())
         return support
-            .appendingPathComponent("Stash", isDirectory: true)
+            .appendingPathComponent("Tote", isDirectory: true)
             .appendingPathComponent("entries.json")
     }
 }

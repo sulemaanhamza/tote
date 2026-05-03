@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-command Stash release.
+# One-command Tote release.
 #
 # Usage:
 #   ./scripts/release.sh <version> [notes-file]
@@ -10,8 +10,8 @@
 #
 # What it does, in order:
 #   1. Run self-tests — refuses to release on any failure
-#   2. Build Stash.app at the given version (via build-app.sh)
-#   3. Zip it (build/Stash-<version>.zip)
+#   2. Build Tote.app at the given version (via build-app.sh)
+#   3. Zip it (build/Tote-<version>.zip)
 #   4. Create + push annotated git tag v<version>
 #   5. Create GitHub release with notes (from file or default)
 #   6. Upload the zip as a release asset
@@ -33,7 +33,7 @@ if [[ -z "$VERSION" ]]; then
 fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-NAME="Stash"
+NAME="Tote"
 TAG="v$VERSION"
 ZIP_NAME="$NAME-$VERSION.zip"
 ZIP_PATH="$ROOT/build/$ZIP_NAME"
@@ -51,7 +51,7 @@ if git ls-remote --tags origin "refs/tags/$TAG" | grep -q "$TAG"; then
 fi
 
 echo "==> 1/7 Running self-tests..."
-swift run Stash --test
+swift run Tote --test
 
 echo "==> 2/7 Building $NAME $VERSION..."
 ./scripts/build-app.sh "$VERSION"
@@ -80,5 +80,5 @@ echo "==> 7/7 Bumping homebrew tap..."
 
 echo ""
 echo "Released $VERSION."
-echo "  Release: https://github.com/sulemaanhamza/stash/releases/tag/$TAG"
-echo "  Tap:     https://github.com/sulemaanhamza/homebrew-stash"
+echo "  Release: https://github.com/sulemaanhamza/tote/releases/tag/$TAG"
+echo "  Tap:     https://github.com/sulemaanhamza/homebrew-tote"

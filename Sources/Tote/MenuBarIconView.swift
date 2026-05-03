@@ -12,7 +12,7 @@ import AppKit
 /// 4. **Right click** — surface the context menu.
 ///
 /// All visual changes (empty vs filled glyph, halo on drag-over, scale
-/// pulse on stash) happen on the button itself, owned by MenuBarController.
+/// pulse on add) happen on the button itself, owned by MenuBarController.
 @MainActor
 final class MenuBarIconView: NSView, NSDraggingSource {
     private let topURLForDrag: () -> URL?

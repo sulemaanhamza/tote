@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Bump the homebrew-stash tap to a new Stash release.
+# Bump the homebrew-tote tap to a new Tote release.
 #
 # Usage: ./scripts/bump-tap.sh <version>
 # Example: ./scripts/bump-tap.sh 0.1.0
 #
 # Assumes:
-#  - The release zip lives at build/Stash-<version>.zip
-#  - The tap repo is checked out at ~/Development/homebrew-stash
+#  - The release zip lives at build/Tote-<version>.zip
+#  - The tap repo is checked out at ~/Development/homebrew-tote
 #  - You can push to it
 #
 # What it does:
-#  1. Computes sha256 of build/Stash-<version>.zip
-#  2. Rewrites Casks/stash.rb in the tap with the new version + sha256
+#  1. Computes sha256 of build/Tote-<version>.zip
+#  2. Rewrites Casks/tote.rb in the tap with the new version + sha256
 #  3. Commits and pushes the tap repo
 
 set -euo pipefail
@@ -23,10 +23,10 @@ if [[ -z "$VERSION" ]]; then
     exit 1
 fi
 
-STASH_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TAP_ROOT="${STASH_TAP_ROOT:-$HOME/Development/homebrew-stash}"
-ZIP_PATH="$STASH_ROOT/build/Stash-$VERSION.zip"
-CASK_PATH="$TAP_ROOT/Casks/stash.rb"
+TOTE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TAP_ROOT="${TOTE_TAP_ROOT:-$HOME/Development/homebrew-tote}"
+ZIP_PATH="$TOTE_ROOT/build/Tote-$VERSION.zip"
+CASK_PATH="$TAP_ROOT/Casks/tote.rb"
 
 [[ -f "$ZIP_PATH" ]] || { echo "Error: $ZIP_PATH not found. Build the release first." >&2; exit 1; }
 [[ -d "$TAP_ROOT" ]] || { echo "Error: tap repo not found at $TAP_ROOT" >&2; exit 1; }
@@ -44,13 +44,13 @@ sed -i '' \
     "$CASK_PATH"
 
 cd "$TAP_ROOT"
-if git diff --quiet Casks/stash.rb; then
+if git diff --quiet Casks/tote.rb; then
     echo "No changes — cask already at $VERSION."
     exit 0
 fi
 
-git add Casks/stash.rb
-git commit -m "Bump stash to $VERSION"
+git add Casks/tote.rb
+git commit -m "Bump tote to $VERSION"
 git push
 
 echo "Tap bumped to $VERSION."

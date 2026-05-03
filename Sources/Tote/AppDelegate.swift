@@ -2,11 +2,11 @@ import AppKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let store = StashStore()
+    private let store = ToteStore()
     private let updater = Updater()
     private var menuBar: MenuBarController?
     private var popover: PopoverController?
-    private var service: StashService?
+    private var service: ToteService?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let pop = PopoverController(store: store)
@@ -27,11 +27,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         )
 
-        // Register as a system Service ("Stash" in the right-click menu
+        // Register as a system Service ("Tote" in the right-click menu
         // for file selections). NSUpdateDynamicServices nudges the
         // services daemon (pbs) to re-scan our Info.plist; without it,
         // the menu entry can take a logout/login to appear on first run.
-        let svc = StashService(store: store)
+        let svc = ToteService(store: store)
         service = svc
         NSApp.servicesProvider = svc
         NSUpdateDynamicServices()
@@ -52,7 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             string: """
             A file clipboard for the macOS menu bar — drag in, drag out.
 
-            MIT licensed. Source at github.com/sulemaanhamza/stash.
+            MIT licensed. Source at github.com/sulemaanhamza/tote.
             """,
             attributes: [
                 .font: NSFont.systemFont(ofSize: 11),
@@ -62,7 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(options: [
-            .applicationName: "Stash",
+            .applicationName: "Tote",
             .applicationVersion: version,
             .credits: credits,
             .init(rawValue: "Copyright"): "© 2026 Suleman Hamza",

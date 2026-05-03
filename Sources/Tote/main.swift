@@ -1,6 +1,6 @@
 import AppKit
 
-// `swift run Stash --test` runs the in-process smoke tests instead of
+// `swift run Tote --test` runs the in-process smoke tests instead of
 // starting the GUI. See SelfTests.swift.
 if CommandLine.arguments.contains("--test") {
     SelfTests.run()

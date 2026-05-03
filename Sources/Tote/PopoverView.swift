@@ -3,7 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct PopoverView: View {
-    @ObservedObject var store: StashStore
+    @ObservedObject var store: ToteStore
     /// Owned by the AppDelegate; we publish the hovered URL so the QL
     /// monitor can preview it on spacebar.
     @ObservedObject var hover: HoverState
@@ -14,7 +14,7 @@ struct PopoverView: View {
                 emptyState
             } else {
                 ForEach(store.entries) { entry in
-                    StashRow(entry: entry, store: store, hover: hover)
+                    ToteRow(entry: entry, store: store, hover: hover)
                     if entry.id != store.entries.last?.id {
                         Divider().opacity(0.3)
                     }
@@ -46,9 +46,9 @@ final class HoverState: ObservableObject {
     @Published var hoveredURL: URL?
 }
 
-private struct StashRow: View {
-    let entry: StashEntry
-    @ObservedObject var store: StashStore
+private struct ToteRow: View {
+    let entry: ToteEntry
+    @ObservedObject var store: ToteStore
     @ObservedObject var hover: HoverState
 
     @State private var isHovered = false
@@ -123,7 +123,7 @@ private struct StashRow: View {
                 .symbolRenderingMode(.hierarchical)
         }
         .buttonStyle(.plain)
-        .help("Remove from Stash")
+        .help("Remove from Tote")
     }
 
     private var iconImage: some View {
