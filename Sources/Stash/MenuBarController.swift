@@ -5,6 +5,7 @@ import Combine
 final class MenuBarController: NSObject {
     private let statusItem: NSStatusItem
     private let store: StashStore
+    private let updater: Updater
     private let onClick: () -> Void
     private let currentLaunchAtLogin: () -> Bool
     private let onToggleLaunchAtLogin: () -> Void
@@ -15,12 +16,14 @@ final class MenuBarController: NSObject {
 
     init(
         store: StashStore,
+        updater: Updater,
         onClick: @escaping () -> Void,
         currentLaunchAtLogin: @escaping () -> Bool,
         onToggleLaunchAtLogin: @escaping () -> Void,
         onShowAbout: @escaping () -> Void
     ) {
         self.store = store
+        self.updater = updater
         self.onClick = onClick
         self.currentLaunchAtLogin = currentLaunchAtLogin
         self.onToggleLaunchAtLogin = onToggleLaunchAtLogin
@@ -117,6 +120,13 @@ final class MenuBarController: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Updater item shows up only when there's something for the user
+        // to act on. Hidden in the .idle case so the menu stays quiet.
+        if let updaterItem = makeUpdaterMenuItem() {
+            menu.addItem(updaterItem)
+            menu.addItem(NSMenuItem.separator())
+        }
+
         let launchItem = NSMenuItem(
             title: "Launch at Login",
             action: #selector(handleToggleLaunchAtLogin),
@@ -147,7 +157,35 @@ final class MenuBarController: NSObject {
         statusItem.menu = nil
     }
 
+    private func makeUpdaterMenuItem() -> NSMenuItem? {
+        switch updater.state {
+        case .idle:
+            return nil
+        case .available(let version, _):
+            let item = NSMenuItem(
+                title: "Update to \(version) — install",
+                action: #selector(handleUpdaterClick),
+                keyEquivalent: ""
+            )
+            item.target = self
+            return item
+        case .downloading(let version):
+            let item = NSMenuItem(title: "Downloading \(version)…", action: nil, keyEquivalent: "")
+            item.isEnabled = false
+            return item
+        case .pending(let version):
+            let item = NSMenuItem(
+                title: "Restart to apply \(version)",
+                action: #selector(handleUpdaterClick),
+                keyEquivalent: ""
+            )
+            item.target = self
+            return item
+        }
+    }
+
     @objc private func handleOpen() { onClick() }
     @objc private func handleToggleLaunchAtLogin() { onToggleLaunchAtLogin() }
     @objc private func handleShowAbout() { onShowAbout() }
+    @objc private func handleUpdaterClick() { updater.handleClick() }
 }

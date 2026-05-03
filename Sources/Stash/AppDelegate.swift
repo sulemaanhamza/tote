@@ -3,6 +3,7 @@ import AppKit
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = StashStore()
+    private let updater = Updater()
     private var menuBar: MenuBarController?
     private var popover: PopoverController?
 
@@ -12,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menuBar = MenuBarController(
             store: store,
+            updater: updater,
             onClick: { [weak self] in
                 guard let anchor = self?.menuBar?.anchorView else { return }
                 pop.toggle(relativeTo: anchor)
@@ -23,6 +25,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.showStandardAboutPanel()
             }
         )
+
+        Task { await updater.check() }
     }
 
     /// Re-launching while running (Spotlight, Finder double-click) hits
